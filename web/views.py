@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from faulthandler import disable
 from rest_framework.response import Response
 from django.shortcuts import render
 from django.shortcuts import render
@@ -36,7 +37,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 Events = Event.objects.filter(disabled = False).order_by("Upcoming_DateTime")
                 for item in list(Events):
                         Upcoming_Time = item.Upcoming_DateTime.strftime("%H:%M")
-                        minute = int(item.Upcoming_DateTime.strftime("%M")) - abs(item.treshold)
+                        minute = int(item.Upcoming_DateTime.strftime("%M")) - abs(item.treshold)#-1
                         hour = int(item.Upcoming_DateTime.strftime("%H"))
                         while(minute < 0):
                                 if hour == 0:
@@ -44,8 +45,9 @@ class EventViewSet(viewsets.ModelViewSet):
                                         minute = 60 - abs(minute)
                                 else:
                                         hour -= 1
-                                        minute = 60 - minute
+                                        minute = 60 - abs(minute)
                         Upcoming_Time = f"{hour}:{minute}"
+                        print(Upcoming_Time)
                         Upcoming_date = item.Upcoming_DateTime.date()
                         Current_Date = datetime.now().date()
                         dateandTime = datetime.now()
@@ -60,13 +62,33 @@ class EventViewSet(viewsets.ModelViewSet):
                                         try:
                                             #Trying to Notify the Person in Email_Update The Object and Shift the date
                                             if (item.Repeat_all_Day):
+                                                """
+                                                If event is a all day event every time that event passed , shift the date for a day
+                                                """
                                                 updated_date = item.Upcoming_DateTime + timedelta(days=1)
                                                 EventObj = Event.objects.filter(id = int(item.id)).update(Upcoming_DateTime = updated_date)
                                                 EventObj.save()
-                                                print(EventObj.Upcoming_DateTime)
+
+                                            elif (item.Repeat != 0):
+                                                """
+                                                for Repeat times Repeat the Event
+                                                """
+                                                updated_date = item.Upcoming_DateTime + timedelta(days=1)
+                                                repeat = item.Repeat - 1
+                                                if repeat == 0:
+                                                        EventObj = Event.objects.filter(id = int(item.id)).update(Upcoming_DateTime = updated_date,
+                                                                                                                  Repeat = repeat, disabled = True)
+                                                        EventObj.save()                                                        
+                                                else:
+                                                        EventObj = Event.objects.filter(id = int(item.id)).update(Upcoming_DateTime = updated_date,
+                                                                                                                  Repeat = repeat)
+                                                        EventObj.save()
+
                                             else:
+                                                """
+                                                if Event not repeatable true disbled status to the True
+                                                """
                                                 EventObj = Event.objects.filter(id = int(item.id)).update(disabled = True)
-                                                print(EventObj.disabled)
                                                 EventObj.save()
                                             print(f"Upcoming Event: {item.Title}\n{item.description}\n{item.logo}")
 
