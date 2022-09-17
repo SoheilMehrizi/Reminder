@@ -2,6 +2,9 @@ from datetime import datetime
 from django.apps import AppConfig
 
 class WebConfig(AppConfig):
+    """
+    SetUp the Background Fuctionality
+    """
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'web'
     def ready(self):

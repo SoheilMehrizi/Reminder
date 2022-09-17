@@ -10,6 +10,9 @@ from .models import(
 )
 
 class Event_Serializer(serializers.ModelSerializer):
+    """
+    Serialize the Event Model for Rest API
+    """
     class Meta:
         model = Event
         fields = ["Title", "description", "logo", "treshold",

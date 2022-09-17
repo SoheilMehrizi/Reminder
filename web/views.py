@@ -1,13 +1,10 @@
-from datetime import datetime, timedelta
-from faulthandler import disable
+from datetime import (datetime,
+                      timedelta
+                      )
 import requests
 from operator import itemgetter
 from rest_framework.response import Response
-from django.shortcuts import render
-from django.shortcuts import render
-from rest_framework.decorators import api_view
-from django.contrib.auth.models import User
-from rest_framework import authentication, permissions
+from rest_framework import permissions
 from rest_framework import (
                     viewsets,
                     permissions
@@ -15,12 +12,11 @@ from rest_framework import (
 from rest_framework.views import APIView
 from .models import(
         Event,
-
 )
 from .serializers import(
         Event_Serializer,
                         )
-from web import serializers
+
 
 
 
