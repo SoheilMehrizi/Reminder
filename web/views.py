@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from faulthandler import disable
 import requests
+from operator import itemgetter
 from rest_framework.response import Response
 from django.shortcuts import render
 from django.shortcuts import render
@@ -100,30 +101,29 @@ class EventViewSet(viewsets.ModelViewSet):
                                         except :
                                             print("Ruined!")
                         print(f"itemID:{item.id}\nUpcoming: {Upcoming_Time}is_now?{Current_Time == Upcoming_Time}, Upcoming_date: {Upcoming_date}/is_now?{Current_Date == Upcoming_date}")
-#class UserViewSet(viewsets.ModelViewSet):
-#        """
-#        User Api endpoint for Show, create, edit or delete the 
-#        User Object
-#        """
-
-#        queryset = MyUser.objects.all()
-#        serializer_class = User_Serializer
-#        permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 class ReminderAPI(APIView):
+     """
+     Remind The Upcoming Requests
+     post: push upcoming Resquests into the Buffer
+     get: pull the sorted list if upcoming requests from Buffer
+     _clear: clear the Buffer every 10 minutes 
+     """
      reminder = {}
      Buffer = []
      def get(self, request):
         """
-        return upcomming requests
+        return Sorted upcomming requests
         """
-        return Response(self.Buffer)
+        Sorted_Buffer = sorted(list(self.Buffer), key = itemgetter('Upcoming'))
+        return Response(Sorted_Buffer)
            
      def post(self, request):
         """
         send the notification
         """
         try:
+            self.reminder = {}
             self.reminder['Title'] = request.POST['Title']
             self.reminder['Description'] = request.POST['Description']
             self.reminder['logo'] = request.POST['logo']
@@ -135,8 +135,8 @@ class ReminderAPI(APIView):
         
      def _clear(self):
         """
-        clear the Alarm dict every 5 minutes
+        clear the Alarm dict every 10 minutes
         """
-        self.Alarm_List.clear()
-        self.Alarm = {}
+        self.Buffer.clear()
+        self.reminder = {}
         
