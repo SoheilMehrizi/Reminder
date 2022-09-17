@@ -5,6 +5,7 @@ class WebConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'web'
     def ready(self):
-        from .reminder_scheduler import reminder_updator
+        from .reminder_scheduler import reminder_updator,  Reminder_Buffer_cleaner
         print("Start The Scout...")
         reminder_updator.start()
+        Reminder_Buffer_cleaner.start()

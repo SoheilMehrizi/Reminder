@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from faulthandler import disable
+import requests
 from rest_framework.response import Response
 from django.shortcuts import render
 from django.shortcuts import render
@@ -18,6 +19,7 @@ from .models import(
 from .serializers import(
         Event_Serializer,
                         )
+from web import serializers
 
 
 
@@ -55,7 +57,6 @@ class EventViewSet(viewsets.ModelViewSet):
                         Current_Time_M = int(dateandTime.strftime("%M"))
                         Current_Time = f"{Current_Time_H}:{Current_Time_M}"
                         print(f"curenttiem:{Current_Time}")
-                        print(f"upcomingtime:{Upcoming_Time}")
                         Time_Status = (Current_Time == Upcoming_Time)
                         if (Current_Date == Upcoming_date):
                                 if (Time_Status):
@@ -84,6 +85,7 @@ class EventViewSet(viewsets.ModelViewSet):
                                                                                                                   Repeat = repeat)
                                                         EventObj.save()
 
+
                                             else:
                                                 """
                                                 if Event not repeatable true disbled status to the True
@@ -91,10 +93,13 @@ class EventViewSet(viewsets.ModelViewSet):
                                                 EventObj = Event.objects.filter(id = int(item.id)).update(disabled = True)
                                                 EventObj.save()
                                             print(f"Upcoming Event: {item.Title}\n{item.description}\n{item.logo}")
-
+                                            notify_URL = "http://localhost:8000/Reminder/"
+                                            Params = {'Title':item.Title, 'Description':item.description, 'logo':item.logo, 'Upcoming':item.Upcoming_DateTime}
+                                            response = requests.post(notify_URL, Params)
+                                            print(response)
                                         except :
-                                            print("fucked UP!")
-                        print(f"itemID:{item.id}\nUpcoming_min: {Upcoming_Time}is_now?{Current_Time == Upcoming_Time}, Upcoming_date: {Upcoming_date}/is_now?{Current_Date == Upcoming_date}")
+                                            print("Ruined!")
+                        print(f"itemID:{item.id}\nUpcoming: {Upcoming_Time}is_now?{Current_Time == Upcoming_Time}, Upcoming_date: {Upcoming_date}/is_now?{Current_Date == Upcoming_date}")
 #class UserViewSet(viewsets.ModelViewSet):
 #        """
 #        User Api endpoint for Show, create, edit or delete the 
@@ -105,14 +110,33 @@ class EventViewSet(viewsets.ModelViewSet):
 #        serializer_class = User_Serializer
 #        permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-class SomeView(APIView):
+class ReminderAPI(APIView):
+     reminder = {}
+     Buffer = []
      def get(self, request):
         """
         return upcomming requests
         """
-        dateandTime = datetime.now()
-        Current_Time = dateandTime.strftime("%H:%M")
-        Current_Date = datetime.now().date()
-        upcomings = list(Event.objects.all())
-        print(f"{Current_Time}\n,{Current_Date}, {upcomings}")
-        return Response(len(upcomings))
+        return Response(self.Buffer)
+           
+     def post(self, request):
+        """
+        send the notification
+        """
+        try:
+            self.reminder['Title'] = request.POST['Title']
+            self.reminder['Description'] = request.POST['Description']
+            self.reminder['logo'] = request.POST['logo']
+            self.reminder['Upcoming'] = request.POST['Upcoming']
+            self.Buffer.append(self.reminder)
+            return Response({'status_code':200})
+        except:
+                return Response({'Status':'Somthing Went Wrong!:('})        
+        
+     def _clear(self):
+        """
+        clear the Alarm dict every 5 minutes
+        """
+        self.Alarm_List.clear()
+        self.Alarm = {}
+        
